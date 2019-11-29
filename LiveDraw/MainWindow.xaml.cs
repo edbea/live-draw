@@ -672,9 +672,13 @@ namespace AntFu7.LiveDraw
         }
         private void EndDrag()
         {
+            if(_isDraging == true)
+            {
+                SetEnable(_tempEnable);
+            }
+
             _isDraging = false;
             Palette.Background = null;
-            SetEnable(_tempEnable);
         }
         private void PaletteGrip_MouseDown(object sender, MouseButtonEventArgs e)
         {
