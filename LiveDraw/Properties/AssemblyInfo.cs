@@ -10,9 +10,9 @@ using System.Windows;
 [assembly: AssemblyTitle("LiveDraw")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("AllDream")]
 [assembly: AssemblyProduct("LiveDraw")]
-[assembly: AssemblyCopyright("Copyright ©  2015")]
+[assembly: AssemblyCopyright("Copyright © AllDream 2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

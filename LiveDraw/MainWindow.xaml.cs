@@ -31,6 +31,8 @@ namespace AntFu7.LiveDraw
         private static readonly Duration Duration7 = (Duration)Application.Current.Resources["Duration7"];
         private static readonly Duration Duration10 = (Duration)Application.Current.Resources["Duration10"];
 
+        private static Mutex mutex = new Mutex(true, "alldream-livedraw");
+
         /*#region Mouse Throught
 
         private const int WsExTransparent = 0x20;
@@ -59,23 +61,36 @@ namespace AntFu7.LiveDraw
 
         public MainWindow()
         {
-            _history = new Stack<StrokesHistoryNode>();
-            _redoHistory = new Stack<StrokesHistoryNode>();
-            if (!Directory.Exists("Save"))
-                Directory.CreateDirectory("Save");
-            InitializeComponent();
-            SetColor(DefaultColorPicker);
-            SetEnable(true);
-            SetTopMost(true);
-            SetBrushSize(5);
-            DetailPanel.Opacity = 0;
-            MainInkCanvas.Strokes.StrokesChanged += StrokesChanged;
-            //RightDocking();
+            if (mutex.WaitOne(TimeSpan.Zero, true))
+            {
+
+                _history = new Stack<StrokesHistoryNode>();
+                _redoHistory = new Stack<StrokesHistoryNode>();
+                if (!Directory.Exists("Save"))
+                    Directory.CreateDirectory("Save");
+
+                InitializeComponent();
+                SetColor(DefaultColorPicker);
+                SetEnable(false);
+                SetTopMost(true);
+                SetDetailPanel(true);
+                SetBrushSize(5);
+                DetailPanel.Opacity = 0;
+                MainInkCanvas.Strokes.StrokesChanged += StrokesChanged;
+                //RightDocking();
+
+            }
+            else
+            {
+                Application.Current.Shutdown(0);
+            }
         }
 
         private void Exit(object sender, EventArgs e)
         {
-            if (IsUnsaved()) QuickSave("ExitingAutoSave_");
+            if (IsUnsaved()) 
+                QuickSave("ExitingAutoSave_");
+
             Application.Current.Shutdown(0);
         }
 
@@ -407,7 +422,8 @@ namespace AntFu7.LiveDraw
 
         private void AnimatedClear()
         {
-            if (!PromptToSave()) return;
+            //no need any more
+            //if (!PromptToSave()) return;
             var ani = new DoubleAnimation(0, Duration3);
             ani.Completed += ClearAniComplete; ;
             MainInkCanvas.BeginAnimation(OpacityProperty, ani);
@@ -644,17 +660,21 @@ namespace AntFu7.LiveDraw
         #region /---------Dragging---------/
         private Point _lastMousePosition;
         private bool _isDraging;
+        private bool _tempEnable;
 
         private void StartDrag()
         {
             _lastMousePosition = Mouse.GetPosition(this);
             _isDraging = true;
             Palette.Background = new SolidColorBrush(Colors.Transparent);
+            _tempEnable = _enable;
+            SetEnable(true);
         }
         private void EndDrag()
         {
             _isDraging = false;
             Palette.Background = null;
+            SetEnable(_tempEnable);
         }
         private void PaletteGrip_MouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -674,7 +694,9 @@ namespace AntFu7.LiveDraw
         private void Palette_MouseUp(object sender, MouseButtonEventArgs e)
         { EndDrag(); }
         private void Palette_MouseLeave(object sender, MouseEventArgs e)
-        { EndDrag(); }
+        { 
+            EndDrag();
+        }
 
 
         #endregion
