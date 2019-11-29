@@ -113,7 +113,7 @@
                                         <TextBlock x:Name="InfoBox" Foreground="White" FontSize="10" FontFamily="Consolas" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                 </Border>
-                                <Button x:Name="DetailToggler" Style="{StaticResource ResponseButton}" Background="#FF86C91F" VerticalAlignment="Center" Click="DetailToggler_Click" ToolTip="Toggle more option" >
+                                <Button x:Name="DetailToggler" Style="{StaticResource ResponseButton}" Background="#FF86C91F" VerticalAlignment="Center" Click="DetailToggler_Click" ToolTip="展开/收起" >
                                     <Path Data="{DynamicResource IconArrow}" Margin="0,1,0,0" Width="10">
                                         <Path.RenderTransform>
                                             <RotateTransform x:Name="DetailTogglerRotate"/>
