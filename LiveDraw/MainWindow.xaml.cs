@@ -377,6 +377,13 @@ namespace AntFu7.LiveDraw
             {
                 _drawerIsMove = false;
                 _ignoreStrokesChange = false;
+
+                if (_drawerLastStroke != null)
+                {
+                    StrokeCollection collection = new StrokeCollection();
+                    collection.Add(_drawerLastStroke);
+                    Push(_history, new StrokesHistoryNode(collection, StrokesHistoryNodeType.Added));
+                }
             }
         }
 
@@ -392,16 +399,58 @@ namespace AntFu7.LiveDraw
             drawingAttributes.IgnorePressure = true;
             drawingAttributes.FitToCurve = false;//must be false,other wise rectangle can not be drawed correct
 
-            if (_mode == DrawMode.Rectangle)
+            Point endP = e.GetPosition(MainInkCanvas);
+
+            if (_mode == DrawMode.Text)
             {
-                System.Windows.Point endP = e.GetPosition(MainInkCanvas);
-                List<System.Windows.Point> pointList = new List<System.Windows.Point>
+
+            }
+            else if(_mode == DrawMode.Line)
+            {
+                List<Point> pointList = new List<Point>
                 {
-                    new System.Windows.Point(_drawerIntPos.X, _drawerIntPos.Y),
-                        new System.Windows.Point(_drawerIntPos.X, endP.Y),
-                        new System.Windows.Point(endP.X, endP.Y),
-                        new System.Windows.Point(endP.X, _drawerIntPos.Y),
-                        new System.Windows.Point(_drawerIntPos.X, _drawerIntPos.Y),
+                    new Point(_drawerIntPos.X, _drawerIntPos.Y),
+                    new Point(endP.X, endP.Y),
+                };
+
+                StylusPointCollection point = new StylusPointCollection(pointList);
+                stroke = new Stroke(point)
+                {
+                    DrawingAttributes = drawingAttributes,
+                };
+            }
+            else if(_mode == DrawMode.Arrow)
+            {
+                //FUCK THE MATH!!!!!!!!!!!!!!!FUCK !FUCK~!
+                double w=15, h = 15;
+                double theta = Math.Atan2(_drawerIntPos.Y - endP.Y, _drawerIntPos.X - endP.X);
+                double sint = Math.Sin(theta);
+                double cost = Math.Cos(theta);
+
+                List<Point> pointList = new List<Point>
+                {
+                    new Point(_drawerIntPos.X, _drawerIntPos.Y),
+                    new Point(endP.X , endP.Y),
+                    new Point(endP.X + (w*cost - h*sint), endP.Y + (w*sint + h*cost)),
+                    new Point(endP.X,endP.Y),
+                    new Point(endP.X + (w*cost + h*sint), endP.Y - (h*cost - w*sint)),
+                };
+
+                StylusPointCollection point = new StylusPointCollection(pointList);
+                stroke = new Stroke(point)
+                {
+                    DrawingAttributes = drawingAttributes,
+                };
+            }
+            else if (_mode == DrawMode.Rectangle)
+            {
+                List<Point> pointList = new List<Point>
+                {
+                    new Point(_drawerIntPos.X, _drawerIntPos.Y),
+                    new Point(_drawerIntPos.X, endP.Y),
+                    new Point(endP.X, endP.Y),
+                    new Point(endP.X, _drawerIntPos.Y),
+                    new Point(_drawerIntPos.X, _drawerIntPos.Y),
                 };
 
                 StylusPointCollection point = new StylusPointCollection(pointList);
@@ -412,14 +461,12 @@ namespace AntFu7.LiveDraw
             }
             else if(_mode == DrawMode.Circle)
             {
-                System.Windows.Point endP = e.GetPosition(MainInkCanvas);
-                List<System.Windows.Point> pointList = GenerateEclipseGeometry(_drawerIntPos, endP);
+                List<Point> pointList = GenerateEclipseGeometry(_drawerIntPos, endP);
                 StylusPointCollection point = new StylusPointCollection(pointList);
                 stroke = new Stroke(point)
                 {
                     DrawingAttributes = drawingAttributes
                 };
-
             }
 
             if (_drawerLastStroke != null)
