@@ -77,7 +77,7 @@ namespace AntFu7.LiveDraw
                 
                 SetTopMost(true);
                 
-                SetBrushSize(5);
+                SetBrushSize(2);
 
                 ExtraToolPanel.Opacity = 0;
 
@@ -138,7 +138,7 @@ namespace AntFu7.LiveDraw
         private bool _eraserMode = false;
         private bool _enable = false;
         private readonly int[] _brushSizes = { 2, 5, 8, 13, 20 };
-        private int _brushIndex = 1;
+        private int _brushIndex = 0;
         private bool _displayOrientation;
         private DrawMode _mode = DrawMode.Pen;
         private InkCanvasEditingMode _lastEditingMode = InkCanvasEditingMode.Ink;
@@ -397,7 +397,6 @@ namespace AntFu7.LiveDraw
 
             drawingAttributes.StylusTip = StylusTip.Rectangle;
             drawingAttributes.IgnorePressure = true;
-            drawingAttributes.FitToCurve = false;//must be false,other wise rectangle can not be drawed correct
 
             Point endP = e.GetPosition(MainInkCanvas);
 
@@ -437,6 +436,9 @@ namespace AntFu7.LiveDraw
                 };
 
                 StylusPointCollection point = new StylusPointCollection(pointList);
+
+                drawingAttributes.FitToCurve = false;//must be false,other wise rectangle can not be drawed correct
+
                 stroke = new Stroke(point)
                 {
                     DrawingAttributes = drawingAttributes,
@@ -452,6 +454,8 @@ namespace AntFu7.LiveDraw
                     new Point(endP.X, _drawerIntPos.Y),
                     new Point(_drawerIntPos.X, _drawerIntPos.Y),
                 };
+
+                drawingAttributes.FitToCurve = false;//must be false,other wise rectangle can not be drawed correct
 
                 StylusPointCollection point = new StylusPointCollection(pointList);
                 stroke = new Stroke(point)
