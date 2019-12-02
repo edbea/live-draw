@@ -30,7 +30,7 @@
         </Style>
     </Window.Resources>
     <Grid>
-        <InkCanvas x:Name="MainInkCanvas" Background="{x:Null}" MoveEnabled="False" ResizeEnabled="False" Cursor="Pen" Margin="0,0,0,-0.333">
+        <InkCanvas x:Name="MainInkCanvas" Background="{x:Null}" MoveEnabled="False" ResizeEnabled="False" Cursor="Pen" Margin="0,0,0,-0.333" MouseLeftButtonDown="MainInkCanvas_MouseLeftButtonDown" MouseLeftButtonUp="MainInkCanvas_MouseLeftButtonUp" MouseMove="MainInkCanvas_MouseMove">
             <InkCanvas.DefaultDrawingAttributes>
                 <DrawingAttributes Color="#FFFF5656" FitToCurve="True" Height="5" IgnorePressure="False" IsHighlighter="False" StylusTip="Ellipse" StylusTipTransform="Identity" Width="5"/>
             </InkCanvas.DefaultDrawingAttributes>
@@ -283,37 +283,43 @@
                                     </local:ActivableButton.RenderTransform>
                                     <Path Data="{DynamicResource IconNoAccess}" />
                                 </local:ActivableButton>
-                                <local:ActivableButton x:Name="PenButton" Click="PenButton_Click" ToolTip="普通画笔">
+                                <local:ActivableButton x:Name="PenButton" Click="PenButton_Click" ToolTip="自由画笔">
                                     <local:ActivableButton.RenderTransform >
                                         <RotateTransform CenterX="16" CenterY="16" Angle="{Binding MinWidth, ElementName=Palette}"/>
                                     </local:ActivableButton.RenderTransform>
                                     <Path Data="{DynamicResource IconPen}" />
                                 </local:ActivableButton>
-                                <local:ActivableButton x:Name="LineButton" Click="LineButton_Click" ToolTip="直线画笔">
+                                <local:ActivableButton x:Name="TextButton" Click="TextButton_Click" ToolTip="添加文字">
+                                    <local:ActivableButton.RenderTransform >
+                                        <RotateTransform CenterX="16" CenterY="16" Angle="{Binding MinWidth, ElementName=Palette}"/>
+                                    </local:ActivableButton.RenderTransform>
+                                    <Path Data="{DynamicResource IconText}" />
+                                </local:ActivableButton>
+                                <local:ActivableButton x:Name="LineButton" Click="LineButton_Click" ToolTip="添加直线">
                                     <local:ActivableButton.RenderTransform >
                                         <RotateTransform CenterX="16" CenterY="16" Angle="{Binding MinWidth, ElementName=Palette}"/>
                                     </local:ActivableButton.RenderTransform>
                                     <Path Data="{DynamicResource IconLine}" />
                                 </local:ActivableButton>
-                                <local:ActivableButton x:Name="ArrowButton" Click="ArrowButton_Click" ToolTip="箭头画笔">
+                                <local:ActivableButton x:Name="ArrowButton" Click="ArrowButton_Click" ToolTip="添加箭头">
                                 <local:ActivableButton.RenderTransform >
                                     <RotateTransform CenterX="16" CenterY="16" Angle="{Binding MinWidth, ElementName=Palette}"/>
                                 </local:ActivableButton.RenderTransform>
                                 <Path Data="{DynamicResource IconArrow1}" />
                             </local:ActivableButton>
-                            <local:ActivableButton x:Name="RectangleButton" Click="RectangleButton_Click" ToolTip="矩形画笔">
+                            <local:ActivableButton x:Name="RectangleButton" Click="RectangleButton_Click" ToolTip="添加矩形">
                                 <local:ActivableButton.RenderTransform >
                                     <RotateTransform CenterX="16" CenterY="16" Angle="{Binding MinWidth, ElementName=Palette}"/>
                                 </local:ActivableButton.RenderTransform>
                                 <Path Data="{DynamicResource IconRectangle}" />
                             </local:ActivableButton>
-                            <local:ActivableButton x:Name="CircleButton" Click="CircleButton_Click" ToolTip="圆形画笔">
+                            <local:ActivableButton x:Name="CircleButton" Click="CircleButton_Click" ToolTip="添加圆形">
                                 <local:ActivableButton.RenderTransform >
                                     <RotateTransform CenterX="16" CenterY="16" Angle="{Binding MinWidth, ElementName=Palette}"/>
                                 </local:ActivableButton.RenderTransform>
                                 <Path Data="{DynamicResource IconCircle}" />
                             </local:ActivableButton>
-                                <local:ActivableButton x:Name="RayButtonButton" Click="RayButton_Click" ToolTip="激光笔">
+                                <local:ActivableButton x:Name="RayButton" Click="RayButton_Click" ToolTip="激光笔">
                                     <local:ActivableButton.RenderTransform >
                                         <RotateTransform CenterX="16" CenterY="16" Angle="{Binding MinWidth, ElementName=Palette}"/>
                                     </local:ActivableButton.RenderTransform>

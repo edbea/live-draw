@@ -70,11 +70,16 @@ namespace AntFu7.LiveDraw
                     Directory.CreateDirectory("Save");
 
                 InitializeComponent();
+
                 SetColor(DefaultColorPicker);
-                SetEnable(false);
+                
+                SetEnable(false,_mode);
+                
                 SetTopMost(true);
-                SetExtralToolPanel(false);
+                
                 SetBrushSize(5);
+
+                ExtraToolPanel.Opacity = 0;
 
                 MainInkCanvas.Strokes.StrokesChanged += StrokesChanged;
                 //RightDocking();
@@ -129,12 +134,14 @@ namespace AntFu7.LiveDraw
 
         private ColorPicker _selectedColor;
         private bool _inkVisibility = true;
-        private bool _displayExtraToolPanel;
-        private bool _eraserMode;
-        private bool _enable;
+        private bool _displayExtraToolPanel = false;
+        private bool _eraserMode = false;
+        private bool _enable = false;
         private readonly int[] _brushSizes = { 2, 5, 8, 13, 20 };
         private int _brushIndex = 1;
         private bool _displayOrientation;
+        private DrawMode _mode = DrawMode.Pen;
+        private InkCanvasEditingMode _lastEditingMode = InkCanvasEditingMode.Ink;
 
         private void SetExtralToolPanel(bool v)
         {
@@ -163,15 +170,50 @@ namespace AntFu7.LiveDraw
             MainInkCanvas.BeginAnimation(OpacityProperty,
                 v ? new DoubleAnimation(0, 1, Duration3) : new DoubleAnimation(1, 0, Duration3));
             HideButton.IsActived = !v;
-            SetEnable(v);
+            SetEnable(v,_mode);
             _inkVisibility = v;
         }
-        private void SetEnable(bool b)
+        private void SetEnable(bool b,DrawMode mode)
         {
             EnableButton.IsActived = !b;
             Background = Application.Current.Resources[b ? "FakeTransparent" : "TrueTransparent"] as Brush;
             _enable = b;
-            //SetTopMost(false);
+            _mode = mode;
+
+            switch (_mode)
+            {
+                case DrawMode.Pen:
+                    break;
+                case DrawMode.Text:
+                    break;
+                case DrawMode.Line:
+                    break;
+                case DrawMode.Arrow:
+                    break;
+                case DrawMode.Rectangle:
+                    break;
+                case DrawMode.Circle:
+                    break;
+                case DrawMode.Ray:
+                    break;
+                default:
+                    _mode = DrawMode.Pen;
+                    break;
+            }
+
+            _lastEditingMode = _mode == DrawMode.Pen ? InkCanvasEditingMode.Ink : InkCanvasEditingMode.None;
+            if(_eraserMode == false)
+            {
+                MainInkCanvas.EditingMode = _lastEditingMode;
+            }
+
+            PenButton.IsActived = _enable == true && _mode == DrawMode.Pen;
+            TextButton.IsActived = _enable == true && _mode == DrawMode.Text;
+            LineButton.IsActived = _enable == true && _mode == DrawMode.Line;
+            ArrowButton.IsActived = _enable == true && _mode == DrawMode.Arrow;
+            RectangleButton.IsActived = _enable == true && _mode == DrawMode.Rectangle;
+            CircleButton.IsActived = _enable == true && _mode == DrawMode.Circle;
+            RayButton.IsActived = _enable == true && _mode == DrawMode.Ray;
         }
         private void SetColor(ColorPicker b)
         {
@@ -197,16 +239,18 @@ namespace AntFu7.LiveDraw
         }
         private void SetEraserMode(bool v)
         {
-            if (_eraserMode)
+            if (v)
             {
+                _lastEditingMode = MainInkCanvas.EditingMode;
                 MainInkCanvas.EditingMode = InkCanvasEditingMode.EraseByStroke;
-                SetStaticInfo("Eraser Mode");
+                SetStaticInfo("擦除模式");
             }
             else
             {
-                MainInkCanvas.EditingMode = InkCanvasEditingMode.Ink;
+                MainInkCanvas.EditingMode = _lastEditingMode;
                 SetStaticInfo("");
             }
+
             EraserButton.IsActived = v;
             _eraserMode = v;
         }
@@ -296,6 +340,97 @@ namespace AntFu7.LiveDraw
         {
             return DateTime.Now.ToString("yyyyMMdd-HHmmss") + fileExt;
         }
+
+        private List<Point> GenerateEclipseGeometry(Point st, Point ed)
+        {
+            double a = 0.5 * (ed.X - st.X);
+            double b = 0.5 * (ed.Y - st.Y);
+            List<Point> pointList = new List<Point>();
+            for (double r = 0; r <= 2 * Math.PI; r = r + 0.01)
+            {
+                pointList.Add(new Point(0.5 * (st.X + ed.X) + a * Math.Cos(r), 0.5 * (st.Y + ed.Y) + b * Math.Sin(r)));
+            }
+            return pointList;
+        }
+        #endregion
+
+        #region Shape Drawer
+        private Point _drawerIntPos;
+        private bool _drawerIsMove = false;
+        private Stroke _drawerLastStroke;
+        private void MainInkCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if(_enable == false || _mode == DrawMode.Pen || _mode == DrawMode.None || e.LeftButton != MouseButtonState.Pressed)
+            {
+                return;
+            }
+
+            _ignoreStrokesChange = true;
+            _drawerIsMove = true;
+            _drawerIntPos = e.GetPosition(MainInkCanvas);
+            _drawerLastStroke = null;
+        }
+
+        private void MainInkCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (_drawerIsMove == true)
+            {
+                _drawerIsMove = false;
+                _ignoreStrokesChange = false;
+            }
+        }
+
+        private void MainInkCanvas_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (_drawerIsMove == false)
+                return;
+
+            DrawingAttributes drawingAttributes = MainInkCanvas.DefaultDrawingAttributes.Clone();
+            Stroke stroke = null;
+
+            drawingAttributes.StylusTip = StylusTip.Rectangle;
+            drawingAttributes.IgnorePressure = true;
+            drawingAttributes.FitToCurve = false;//must be false,other wise rectangle can not be drawed correct
+
+            if (_mode == DrawMode.Rectangle)
+            {
+                System.Windows.Point endP = e.GetPosition(MainInkCanvas);
+                List<System.Windows.Point> pointList = new List<System.Windows.Point>
+                {
+                    new System.Windows.Point(_drawerIntPos.X, _drawerIntPos.Y),
+                        new System.Windows.Point(_drawerIntPos.X, endP.Y),
+                        new System.Windows.Point(endP.X, endP.Y),
+                        new System.Windows.Point(endP.X, _drawerIntPos.Y),
+                        new System.Windows.Point(_drawerIntPos.X, _drawerIntPos.Y),
+                };
+
+                StylusPointCollection point = new StylusPointCollection(pointList);
+                stroke = new Stroke(point)
+                {
+                    DrawingAttributes = drawingAttributes,
+                };
+            }
+            else if(_mode == DrawMode.Circle)
+            {
+                System.Windows.Point endP = e.GetPosition(MainInkCanvas);
+                List<System.Windows.Point> pointList = GenerateEclipseGeometry(_drawerIntPos, endP);
+                StylusPointCollection point = new StylusPointCollection(pointList);
+                stroke = new Stroke(point)
+                {
+                    DrawingAttributes = drawingAttributes
+                };
+
+            }
+
+            if (_drawerLastStroke != null)
+                MainInkCanvas.Strokes.Remove(_drawerLastStroke);
+
+            if (stroke != null)
+                MainInkCanvas.Strokes.Add(stroke);
+
+            _drawerLastStroke = stroke;
+        }
+
         #endregion
 
 
@@ -436,7 +571,7 @@ namespace AntFu7.LiveDraw
         }
         #endregion
 
-        #region #region /---------Color Picker------/
+        #region /---------Color Picker------/
         private void ColorPickers_Click(object sender, RoutedEventArgs e)
         {
             var border = sender as ColorPicker;
@@ -544,36 +679,48 @@ namespace AntFu7.LiveDraw
         }
         private void EnableButton_Click(object sender, RoutedEventArgs e)
         {
-            SetEnable(!_enable);
+            SetEnable(false,_mode);
         }
         private void PenButton_Click(object sender, RoutedEventArgs e)
         {
+            SetEnable(true, DrawMode.Pen);
+            SetEraserMode(false);
+        }
 
+        private void TextButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetEnable(true, DrawMode.Text);
+            SetEraserMode(false);
         }
 
         private void LineButton_Click(object sender, RoutedEventArgs e)
         {
-
+            SetEnable(true, DrawMode.Line);
+            SetEraserMode(false);
         }
 
         private void ArrowButton_Click(object sender, RoutedEventArgs e)
         {
-
+            SetEnable(true, DrawMode.Arrow);
+            SetEraserMode(false);
         }
 
         private void RectangleButton_Click(object sender, RoutedEventArgs e)
         {
-
+            SetEnable(true, DrawMode.Rectangle);
+            SetEraserMode(false);
         }
 
         private void CircleButton_Click(object sender, RoutedEventArgs e)
         {
-
+            SetEnable(true, DrawMode.Circle);
+            SetEraserMode(false);
         }
 
         private void RayButton_Click(object sender, RoutedEventArgs e)
         {
-
+            SetEnable(true, DrawMode.Ray);
+            SetEraserMode(false);
         }
 
         private void UndoButton_Click(object sender, RoutedEventArgs e)
@@ -706,13 +853,13 @@ namespace AntFu7.LiveDraw
             _isDraging = true;
             Palette.Background = new SolidColorBrush(Colors.Transparent);
             _tempEnable = _enable;
-            SetEnable(true);
+            SetEnable(true,_mode);
         }
         private void EndDrag()
         {
             if(_isDraging == true)
             {
-                SetEnable(_tempEnable);
+                SetEnable(_tempEnable,_mode);
             }
 
             _isDraging = false;
@@ -743,6 +890,5 @@ namespace AntFu7.LiveDraw
 
 
         #endregion
-
     }
 }
