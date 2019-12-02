@@ -29,6 +29,10 @@
             <SolidColorBrush x:Key="FunctionalButtonHover" Color="{StaticResource FunctionalButtonHoverColor}" />
             <SolidColorBrush x:Key="FunctionalButtonActive" Color="{StaticResource FunctionalButtonActiveColor}" />
 
+            <SolidColorBrush x:Key="ToolButtonBackground" Color="{StaticResource FunctionalButtonBackgroundColor}" />
+            <SolidColorBrush x:Key="ToolButtonHover" Color="{StaticResource FunctionalButtonHoverColor}" />
+            <SolidColorBrush x:Key="ToollButtonActive" Color="{StaticResource FunctionalButtonActiveColor}" />
+
             <Duration x:Key="Duration1">0:0:0:0.1</Duration>
             <Duration x:Key="Duration2">0:0:0:0.2</Duration>
             <Duration x:Key="Duration3">0:0:0:0.3</Duration>

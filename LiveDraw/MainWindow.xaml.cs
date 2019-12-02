@@ -19,7 +19,7 @@ using System.Windows.Threading;
 using Brush = System.Windows.Media.Brush;
 using Point = System.Windows.Point;
 
-namespace AntFu7.LiveDraw
+namespace AntFu7.LiveDraw   
 {
     public partial class MainWindow : Window
     {
@@ -73,9 +73,9 @@ namespace AntFu7.LiveDraw
                 SetColor(DefaultColorPicker);
                 SetEnable(false);
                 SetTopMost(true);
-                SetDetailPanel(true);
+                SetExtralToolPanel(false);
                 SetBrushSize(5);
-                DetailPanel.Opacity = 0;
+
                 MainInkCanvas.Strokes.StrokesChanged += StrokesChanged;
                 //RightDocking();
 
@@ -129,20 +129,20 @@ namespace AntFu7.LiveDraw
 
         private ColorPicker _selectedColor;
         private bool _inkVisibility = true;
-        private bool _displayDetailPanel;
+        private bool _displayExtraToolPanel;
         private bool _eraserMode;
         private bool _enable;
         private readonly int[] _brushSizes = { 2, 5, 8, 13, 20 };
         private int _brushIndex = 1;
         private bool _displayOrientation;
 
-        private void SetDetailPanel(bool v)
+        private void SetExtralToolPanel(bool v)
         {
             if (v)
             {
                 DetailTogglerRotate.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(180, Duration5));
                 //DefaultColorPicker.Size = ColorPickerButtonSize.Middle;
-                DetailPanel.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, Duration4));
+                ExtraToolPanel.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, Duration4));
                 //PaletteGrip.BeginAnimation(WidthProperty, new DoubleAnimation(130, Duration3));
                 //MinimizeButton.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, Duration3));
                 //MinimizeButton.BeginAnimation(HeightProperty, new DoubleAnimation(0, 25, Duration3));
@@ -151,12 +151,12 @@ namespace AntFu7.LiveDraw
             {
                 DetailTogglerRotate.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(0, Duration5));
                 //DefaultColorPicker.Size = ColorPickerButtonSize.Small;
-                DetailPanel.BeginAnimation(OpacityProperty, new DoubleAnimation(1, 0, Duration4));
+                ExtraToolPanel.BeginAnimation(OpacityProperty, new DoubleAnimation(1, 0, Duration4));
                 //PaletteGrip.BeginAnimation(WidthProperty, new DoubleAnimation(80, Duration3));
                 //MinimizeButton.BeginAnimation(OpacityProperty, new DoubleAnimation(1, 0, Duration3));
                 //MinimizeButton.BeginAnimation(HeightProperty, new DoubleAnimation(25, 0, Duration3));
             }
-            _displayDetailPanel = v;
+            _displayExtraToolPanel = v;
         }
         private void SetInkVisibility(bool v)
         {
@@ -436,54 +436,16 @@ namespace AntFu7.LiveDraw
         }
         #endregion
 
-
-        #region /---------UI---------/
-        private void DetailToggler_Click(object sender, RoutedEventArgs e)
-        {
-            SetDetailPanel(!_displayDetailPanel);
-        }
-        private void CloseButton_Click(object sender, RoutedEventArgs e)
-        {
-            Topmost = false;
-            var anim = new DoubleAnimation(0, Duration3);
-            anim.Completed += Exit;
-            BeginAnimation(OpacityProperty, anim);
-        }
-
+        #region #region /---------Color Picker------/
         private void ColorPickers_Click(object sender, RoutedEventArgs e)
         {
             var border = sender as ColorPicker;
             if (border == null) return;
             SetColor(border);
         }
+        #endregion
 
-        private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            //SetBrushSize(e.NewValue);
-        }
-
-        private void BrushSwitchButton_Click(object sender, RoutedEventArgs e)
-        {
-            _brushIndex++;
-            if (_brushIndex > _brushSizes.Count() - 1) _brushIndex = 0;
-            SetBrushSize(_brushSizes[_brushIndex]);
-        }
-        private void UndoButton_Click(object sender, RoutedEventArgs e)
-        {
-            Undo();
-        }
-        private void RedoButton_Click(object sender, RoutedEventArgs e)
-        {
-            Redo();
-        }
-        private void EraserButton_Click(object sender, RoutedEventArgs e)
-        {
-            SetEraserMode(!_eraserMode);
-        }
-        private void ClearButton_Click(object sender, RoutedEventArgs e)
-        {
-            AnimatedClear();
-        }
+        #region /---------Extra Button---------/
         private void PinButton_Click(object sender, RoutedEventArgs e)
         {
             SetTopMost(!Topmost);
@@ -571,6 +533,85 @@ namespace AntFu7.LiveDraw
                 Display("Export failed");
             }
         }
+        #endregion
+
+        #region /---------Tool Button------/
+        private void BrushSwitchButton_Click(object sender, RoutedEventArgs e)
+        {
+            _brushIndex++;
+            if (_brushIndex > _brushSizes.Count() - 1) _brushIndex = 0;
+            SetBrushSize(_brushSizes[_brushIndex]);
+        }
+        private void EnableButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetEnable(!_enable);
+        }
+        private void PenButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void LineButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ArrowButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void RectangleButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void CircleButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void RayButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void UndoButton_Click(object sender, RoutedEventArgs e)
+        {
+            Undo();
+        }
+        private void RedoButton_Click(object sender, RoutedEventArgs e)
+        {
+            Redo();
+        }
+        private void EraserButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetEraserMode(!_eraserMode);
+        }
+        private void ClearButton_Click(object sender, RoutedEventArgs e)
+        {
+            AnimatedClear();
+        }
+
+        #endregion
+
+        #region /---------UI---------/
+        private void DetailToggler_Click(object sender, RoutedEventArgs e)
+        {
+            SetExtralToolPanel(!_displayExtraToolPanel);
+        }
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            Topmost = false;
+            var anim = new DoubleAnimation(0, Duration3);
+            anim.Completed += Exit;
+            BeginAnimation(OpacityProperty, anim);
+        }
+
+        private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            //SetBrushSize(e.NewValue);
+        }
 
         private void MinimizeButton_Click(object sender, RoutedEventArgs e)
         {
@@ -580,10 +621,7 @@ namespace AntFu7.LiveDraw
         {
             SetInkVisibility(!_inkVisibility);
         }
-        private void EnableButton_Click(object sender, RoutedEventArgs e)
-        {
-            SetEnable(!_enable);
-        }
+        
         private void OrientationButton_Click(object sender, RoutedEventArgs e)
         {
             SetOrientation(!_displayOrientation);
@@ -703,8 +741,8 @@ namespace AntFu7.LiveDraw
         }
 
 
-        #endregion
 
+        #endregion
 
     }
 }
