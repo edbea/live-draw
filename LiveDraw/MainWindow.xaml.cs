@@ -409,15 +409,27 @@ namespace AntFu7.LiveDraw
         {
             if (_drawerIsMove == true)
             {
-                _drawerIsMove = false;
-                _ignoreStrokesChange = false;
-
-                if (_drawerLastStroke != null)
+                if (_drawerLastStroke != null && _mode != DrawMode.Ray)
                 {
                     StrokeCollection collection = new StrokeCollection();
                     collection.Add(_drawerLastStroke);
                     Push(_history, new StrokesHistoryNode(collection, StrokesHistoryNodeType.Added));
                 }
+
+                if(_drawerLastStroke != null && _mode == DrawMode.Ray)
+                {
+                    //us animation?
+                    /*
+                    var ani = new DoubleAnimation(1, 1, Duration4);
+                    ani.Completed += (obj,arg)=> { MainInkCanvas.Strokes.Remove(_drawerLastStroke); };
+                    MainInkCanvas.BeginAnimation(OpacityProperty, ani);
+                    */
+                    MainInkCanvas.Strokes.Remove(_drawerLastStroke);
+
+                }
+
+                _drawerIsMove = false;
+                _ignoreStrokesChange = false;
             }
         }
 
@@ -437,6 +449,23 @@ namespace AntFu7.LiveDraw
             if (_mode == DrawMode.Text)
             {
 
+            }
+            else if(_mode == DrawMode.Ray)
+            {
+                //high lighter is ray line
+                drawingAttributes.IsHighlighter = true;
+
+                List<Point> pointList = new List<Point>
+                {
+                    new Point(_drawerIntPos.X, _drawerIntPos.Y),
+                    new Point(endP.X, endP.Y),
+                };
+
+                StylusPointCollection point = new StylusPointCollection(pointList);
+                stroke = new Stroke(point)
+                {
+                    DrawingAttributes = drawingAttributes,
+                };
             }
             else if(_mode == DrawMode.Line)
             {
