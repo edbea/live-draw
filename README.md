@@ -13,9 +13,9 @@ However, **LiveDraw is here and built for it!**
 
 ## Interface
 
-![](screenshots/00.png)
+![](screenshots/03.png)
 
-![](screenshots/01.png)
+![](screenshots/04.png)
 
 ## Usage
 
@@ -36,13 +36,15 @@ However, **LiveDraw is here and built for it!**
 - Save and load ink to file (binary file) with color.
 - Temporarily disable draw then you can be able to operate other windows.
 - Fully animated.
+- Arrow,Square,Ellipse,Line,Select,Erase,RayPen modes support.
+- Text input mode support
 
 ## Todo
 
 - Edge docking
 - Export as image files
 - Mouse penetration
-
+- Custom stroke class to support erase on text block
 ## Publish
 
 - dotnet publish -r win-x86 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true
