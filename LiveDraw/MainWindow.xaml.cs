@@ -58,7 +58,6 @@ namespace AntFu7.LiveDraw
         #endregion*/
 
         #region /---------Lifetime---------/
-
         public MainWindow()
         {
             if (mutex.WaitOne(TimeSpan.Zero, true))
@@ -76,13 +75,17 @@ namespace AntFu7.LiveDraw
                 SetEnable(false,_mode);
                 
                 SetTopMost(true);
-                
-                SetBrushSize(2);
+
+
+                SetBrushSize(_brushSizes[_brushIndex]);
 
                 ExtraToolPanel.Opacity = 0;
 
                 MainInkCanvas.Strokes.StrokesChanged += StrokesChanged;
-                //RightDocking();
+
+                MainInkCanvas.MouseLeftButtonDown += MainInkCanvas_MouseLeftButtonDown;
+                MainInkCanvas.MouseLeftButtonUp += MainInkCanvas_MouseLeftButtonUp;
+                MainInkCanvas.MouseMove += MainInkCanvas_MouseMove;
 
             }
             else
@@ -135,13 +138,11 @@ namespace AntFu7.LiveDraw
         private ColorPicker _selectedColor;
         private bool _inkVisibility = true;
         private bool _displayExtraToolPanel = false;
-        private bool _eraserMode = false;
         private bool _enable = false;
-        private readonly int[] _brushSizes = { 2, 5, 8, 13, 20 };
+        private readonly int[] _brushSizes = { 4, 6, 8, 10, 14 };
         private int _brushIndex = 0;
         private bool _displayOrientation;
         private DrawMode _mode = DrawMode.Pen;
-        private InkCanvasEditingMode _lastEditingMode = InkCanvasEditingMode.Ink;
 
         private void SetExtralToolPanel(bool v)
         {
@@ -170,43 +171,92 @@ namespace AntFu7.LiveDraw
             MainInkCanvas.BeginAnimation(OpacityProperty,
                 v ? new DoubleAnimation(0, 1, Duration3) : new DoubleAnimation(1, 0, Duration3));
             HideButton.IsActived = !v;
-            SetEnable(v,_mode);
+
+            if (v == false)
+                _tempEnable = _enable;
+
+            SetEnable(v == false ? false : _tempEnable, _mode);
             _inkVisibility = v;
         }
-        private void SetEnable(bool b,DrawMode mode)
+
+        private void SetEraserMode(bool v)
         {
-            EnableButton.IsActived = !b;
-            Background = Application.Current.Resources[b ? "FakeTransparent" : "TrueTransparent"] as Brush;
-            _enable = b;
+            if (v)
+            {
+                MainInkCanvas.EditingMode = InkCanvasEditingMode.EraseByStroke;
+                SetStaticInfo("擦除模式");
+                MainInkCanvas.UseCustomCursor = false;
+            }
+            else
+            {
+                SetStaticInfo("");
+                MainInkCanvas.UseCustomCursor = true;//this will stop to show eraser cursor shape
+            }
+
+            //MainInkCanvas.UseCustomCursor = !v;
+            EraserButton.IsActived = v;
+        }
+
+        private void SetEnable(bool enable,DrawMode mode)
+        {
+            _enable = enable;
             _mode = mode;
+
+            InkCanvasEditingMode editingMode = InkCanvasEditingMode.Ink;
+            bool bUseCustomCursor = true;
 
             switch (_mode)
             {
+                case DrawMode.Select:
+                    bUseCustomCursor = false;
+                    editingMode = InkCanvasEditingMode.Select;
+                    break;
                 case DrawMode.Pen:
+                    editingMode = InkCanvasEditingMode.Ink;
                     break;
                 case DrawMode.Text:
+                    editingMode = InkCanvasEditingMode.None;
                     break;
                 case DrawMode.Line:
+                    editingMode = InkCanvasEditingMode.None;
                     break;
                 case DrawMode.Arrow:
+                    editingMode = InkCanvasEditingMode.None;
                     break;
                 case DrawMode.Rectangle:
+                    editingMode = InkCanvasEditingMode.None;
                     break;
                 case DrawMode.Circle:
+                    editingMode = InkCanvasEditingMode.None;
                     break;
                 case DrawMode.Ray:
+                    editingMode = InkCanvasEditingMode.None;
+                    break;
+                case DrawMode.Erase:
+                    bUseCustomCursor = false;
+                    editingMode = InkCanvasEditingMode.EraseByStroke;
                     break;
                 default:
-                    _mode = DrawMode.Pen;
+                    _mode = DrawMode.Select;
                     break;
             }
 
-            _lastEditingMode = _mode == DrawMode.Pen ? InkCanvasEditingMode.Ink : InkCanvasEditingMode.None;
-            if(_eraserMode == false)
+            if (_mode == DrawMode.Ray)
             {
-                MainInkCanvas.EditingMode = _lastEditingMode;
+                MainInkCanvas.Cursor = new Cursor(new MemoryStream(AntFu7.LiveDraw.Properties.Resources.raycursor));
+            }
+            else
+            {
+                MainInkCanvas.Cursor = Cursors.Cross;
             }
 
+            MainInkCanvas.UseCustomCursor = bUseCustomCursor;
+            MainInkCanvas.EditingMode = editingMode;
+
+            EnableButton.IsActived = !enable;
+            Background = Application.Current.Resources[enable ? "FakeTransparent" : "TrueTransparent"] as Brush;
+
+            SelectButton.IsActived = _enable == true && _mode == DrawMode.Select;
             PenButton.IsActived = _enable == true && _mode == DrawMode.Pen;
             TextButton.IsActived = _enable == true && _mode == DrawMode.Text;
             LineButton.IsActived = _enable == true && _mode == DrawMode.Line;
@@ -214,6 +264,7 @@ namespace AntFu7.LiveDraw
             RectangleButton.IsActived = _enable == true && _mode == DrawMode.Rectangle;
             CircleButton.IsActived = _enable == true && _mode == DrawMode.Circle;
             RayButton.IsActived = _enable == true && _mode == DrawMode.Ray;
+            EraserButton.IsActived = _enable == true && _mode == DrawMode.Erase;
         }
         private void SetColor(ColorPicker b)
         {
@@ -236,23 +287,6 @@ namespace AntFu7.LiveDraw
             MainInkCanvas.DefaultDrawingAttributes.Width = s;
             brushPreview?.BeginAnimation(HeightProperty, new DoubleAnimation(s, Duration4));
             brushPreview?.BeginAnimation(WidthProperty, new DoubleAnimation(s, Duration4));
-        }
-        private void SetEraserMode(bool v)
-        {
-            if (v)
-            {
-                _lastEditingMode = MainInkCanvas.EditingMode;
-                MainInkCanvas.EditingMode = InkCanvasEditingMode.EraseByStroke;
-                SetStaticInfo("擦除模式");
-            }
-            else
-            {
-                MainInkCanvas.EditingMode = _lastEditingMode;
-                SetStaticInfo("");
-            }
-
-            EraserButton.IsActived = v;
-            _eraserMode = v;
         }
         private void SetOrientation(bool v)
         {
@@ -360,7 +394,7 @@ namespace AntFu7.LiveDraw
         private Stroke _drawerLastStroke;
         private void MainInkCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if(_enable == false || _mode == DrawMode.Pen || _mode == DrawMode.None || e.LeftButton != MouseButtonState.Pressed)
+            if(_enable == false || _mode == DrawMode.Select ||  _mode == DrawMode.Pen || _mode == DrawMode.None || e.LeftButton != MouseButtonState.Pressed)
             {
                 return;
             }
@@ -395,7 +429,7 @@ namespace AntFu7.LiveDraw
             DrawingAttributes drawingAttributes = MainInkCanvas.DefaultDrawingAttributes.Clone();
             Stroke stroke = null;
 
-            drawingAttributes.StylusTip = StylusTip.Rectangle;
+            drawingAttributes.StylusTip = StylusTip.Ellipse;
             drawingAttributes.IgnorePressure = true;
 
             Point endP = e.GetPosition(MainInkCanvas);
@@ -732,46 +766,45 @@ namespace AntFu7.LiveDraw
         {
             SetEnable(false,_mode);
         }
+
+        private void SelectButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetEnable(true,DrawMode.Select);
+        }
+
         private void PenButton_Click(object sender, RoutedEventArgs e)
         {
             SetEnable(true, DrawMode.Pen);
-            SetEraserMode(false);
         }
 
         private void TextButton_Click(object sender, RoutedEventArgs e)
         {
             SetEnable(true, DrawMode.Text);
-            SetEraserMode(false);
         }
 
         private void LineButton_Click(object sender, RoutedEventArgs e)
         {
             SetEnable(true, DrawMode.Line);
-            SetEraserMode(false);
         }
 
         private void ArrowButton_Click(object sender, RoutedEventArgs e)
         {
             SetEnable(true, DrawMode.Arrow);
-            SetEraserMode(false);
         }
 
         private void RectangleButton_Click(object sender, RoutedEventArgs e)
         {
             SetEnable(true, DrawMode.Rectangle);
-            SetEraserMode(false);
         }
 
         private void CircleButton_Click(object sender, RoutedEventArgs e)
         {
             SetEnable(true, DrawMode.Circle);
-            SetEraserMode(false);
         }
 
         private void RayButton_Click(object sender, RoutedEventArgs e)
         {
             SetEnable(true, DrawMode.Ray);
-            SetEraserMode(false);
         }
 
         private void UndoButton_Click(object sender, RoutedEventArgs e)
@@ -784,7 +817,7 @@ namespace AntFu7.LiveDraw
         }
         private void EraserButton_Click(object sender, RoutedEventArgs e)
         {
-            SetEraserMode(!_eraserMode);
+            SetEnable(true, DrawMode.Erase);
         }
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {

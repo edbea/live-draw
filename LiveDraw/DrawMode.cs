@@ -7,12 +7,14 @@ namespace AntFu7.LiveDraw
     public enum DrawMode
     {
         None = 0,
+        Select,
         Pen,
         Text,
         Line,
         Arrow,
         Rectangle,
         Circle,
-        Ray
+        Ray,
+        Erase
     }
 }
