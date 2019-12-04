@@ -87,6 +87,11 @@ namespace AntFu7.LiveDraw
                 MainInkCanvas.MouseLeftButtonUp += MainInkCanvas_MouseLeftButtonUp;
                 MainInkCanvas.MouseMove += MainInkCanvas_MouseMove;
 
+                _drawerTextBox.Background = Application.Current.Resources["TrueTransparent"] as Brush;
+                _drawerTextBox.AcceptsReturn = true;
+                _drawerTextBox.TextWrapping = TextWrapping.Wrap;
+                _drawerTextBox.LostFocus += _drawerTextBox_LostFocus;
+
             }
             else
             {
@@ -270,7 +275,8 @@ namespace AntFu7.LiveDraw
         {
             if (ReferenceEquals(_selectedColor, b)) return;
             var solidColorBrush = b.Background as SolidColorBrush;
-            if (solidColorBrush == null) return;
+            if (solidColorBrush == null)
+                return;
 
             var ani = new ColorAnimation(solidColorBrush.Color, Duration3);
 
@@ -280,6 +286,8 @@ namespace AntFu7.LiveDraw
             if (_selectedColor != null)
                 _selectedColor.IsActived = false;
             _selectedColor = b;
+
+            _drawerTextBox.Foreground = solidColorBrush;
         }
         private void SetBrushSize(double s)
         {
@@ -392,6 +400,34 @@ namespace AntFu7.LiveDraw
         private Point _drawerIntPos;
         private bool _drawerIsMove = false;
         private Stroke _drawerLastStroke;
+        private TextBox _drawerTextBox = new TextBox();
+
+        private void _drawerTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            String text = _drawerTextBox.Text;
+
+            if (text.Length > 0)
+            {
+                var textBlock = new TextBlock();
+                //textBlock.TextWrapping = TextWrapping.NoWrap;
+                textBlock.Text = text;
+
+                MainInkCanvas.Children.Add(textBlock);
+
+                textBlock.Visibility = Visibility.Visible;
+                textBlock.Foreground = _drawerTextBox.Foreground;
+                textBlock.FontSize = _drawerTextBox.FontSize;
+                textBlock.TextWrapping = _drawerTextBox.TextWrapping;
+
+                InkCanvas.SetLeft(textBlock, InkCanvas.GetLeft(_drawerTextBox));
+                InkCanvas.SetTop(textBlock, InkCanvas.GetTop(_drawerTextBox));
+            }
+
+            MainInkCanvas.Children.Remove(_drawerTextBox);
+
+            //throw new NotImplementedException();
+        }
+
         private void MainInkCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if(_enable == false || _mode == DrawMode.Select ||  _mode == DrawMode.Pen || _mode == DrawMode.None || e.LeftButton != MouseButtonState.Pressed)
@@ -403,12 +439,29 @@ namespace AntFu7.LiveDraw
             _drawerIsMove = true;
             _drawerIntPos = e.GetPosition(MainInkCanvas);
             _drawerLastStroke = null;
+
+            if(_mode == DrawMode.Text)
+            {
+
+                _drawerTextBox.Text = "";
+
+                if (MainInkCanvas.Children.Contains(_drawerTextBox) == false)
+                    MainInkCanvas.Children.Add(_drawerTextBox);
+
+                _drawerTextBox.Visibility = Visibility.Visible;
+                InkCanvas.SetLeft(_drawerTextBox, _drawerIntPos.X);
+                InkCanvas.SetTop(_drawerTextBox, _drawerIntPos.Y);
+                _drawerTextBox.Width = 0;
+                _drawerTextBox.Height = 0;
+            }
         }
 
         private void MainInkCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             if (_drawerIsMove == true)
             {
+                Point endP = e.GetPosition(MainInkCanvas);
+
                 if (_drawerLastStroke != null && _mode != DrawMode.Ray)
                 {
                     StrokeCollection collection = new StrokeCollection();
@@ -416,7 +469,7 @@ namespace AntFu7.LiveDraw
                     Push(_history, new StrokesHistoryNode(collection, StrokesHistoryNodeType.Added));
                 }
 
-                if(_drawerLastStroke != null && _mode == DrawMode.Ray)
+                if(_drawerLastStroke != null && (_mode == DrawMode.Ray || _mode == DrawMode.Text))
                 {
                     //us animation?
                     /*
@@ -426,6 +479,24 @@ namespace AntFu7.LiveDraw
                     */
                     MainInkCanvas.Strokes.Remove(_drawerLastStroke);
 
+                }
+
+                if (_mode == DrawMode.Text)
+                {
+                    //resize drawer text box
+                    _drawerTextBox.Width = Math.Abs(endP.X - _drawerIntPos.X);
+                    _drawerTextBox.Height = Math.Abs(endP.Y - _drawerIntPos.Y);
+
+                    if (_drawerTextBox.Width <= 100 || _drawerTextBox.Height <= 40)
+                    {
+                        _drawerTextBox.Width = 100;
+                        _drawerTextBox.Height = 40;
+                    }
+
+                    InkCanvas.SetLeft(_drawerTextBox, Math.Min(_drawerIntPos.X, endP.X));
+                    InkCanvas.SetTop(_drawerTextBox, Math.Min(_drawerIntPos.Y, endP.Y));
+
+                    _drawerTextBox.Focus();
                 }
 
                 _drawerIsMove = false;
@@ -448,7 +519,24 @@ namespace AntFu7.LiveDraw
 
             if (_mode == DrawMode.Text)
             {
+                List<Point> pointList = new List<Point>
+                {
+                    new Point(_drawerIntPos.X, _drawerIntPos.Y),
+                    new Point(_drawerIntPos.X, endP.Y),
+                    new Point(endP.X, endP.Y),
+                    new Point(endP.X, _drawerIntPos.Y),
+                    new Point(_drawerIntPos.X, _drawerIntPos.Y),
+                };
 
+                drawingAttributes.Width = 2;
+                drawingAttributes.Height = 2;
+                drawingAttributes.FitToCurve = false;//must be false,other wise rectangle can not be drawed correct
+
+                StylusPointCollection point = new StylusPointCollection(pointList);
+                stroke = new Stroke(point)
+                {
+                    DrawingAttributes = drawingAttributes,
+                };
             }
             else if(_mode == DrawMode.Ray)
             {
@@ -665,6 +753,7 @@ namespace AntFu7.LiveDraw
         }
         private void Clear()
         {
+            MainInkCanvas.Children.Clear();
             MainInkCanvas.Strokes.Clear();
             ClearHistory();
         }

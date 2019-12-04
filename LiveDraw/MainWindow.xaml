@@ -30,7 +30,7 @@
         </Style>
     </Window.Resources>
     <Grid>
-        <InkCanvas x:Name="MainInkCanvas" Background="{x:Null}" MoveEnabled="True" ResizeEnabled="False" UseCustomCursor="False" Cursor="Cross" Margin="0,0,0,-0.333">
+        <InkCanvas x:Name="MainInkCanvas" Background="{x:Null}" UseCustomCursor="False" Cursor="Cross" Margin="0,0,0,-0.333">
             <InkCanvas.DefaultDrawingAttributes>
                 <DrawingAttributes Color="#FFFF5656" FitToCurve="True" Height="5" IgnorePressure="False" IsHighlighter="False" StylusTip="Ellipse" StylusTipTransform="Identity" Width="5"/>
             </InkCanvas.DefaultDrawingAttributes>
@@ -140,6 +140,7 @@
                                 <WrapPanel.Resources>
                                     <Style TargetType="local:ColorPicker" BasedOn="{StaticResource ColorPicker}">
                                         <Setter Property="Size" Value="{Binding ElementName=DefaultColorPicker,Path=Size}"/>
+                                        <Setter Property="Focusable" Value="False" />
                                     </Style>
                                     <Style TargetType="StackPanel">
                                         <Setter Property="Orientation" Value="Horizontal"></Setter>
