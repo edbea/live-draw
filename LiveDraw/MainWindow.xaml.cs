@@ -19,7 +19,7 @@ using System.Windows.Threading;
 using Brush = System.Windows.Media.Brush;
 using Point = System.Windows.Point;
 
-namespace AntFu7.LiveDraw   
+namespace AntFu7.LiveDraw
 {
     public partial class MainWindow : Window
     {
@@ -65,21 +65,24 @@ namespace AntFu7.LiveDraw
 
                 _history = new Stack<StrokesHistoryNode>();
                 _redoHistory = new Stack<StrokesHistoryNode>();
+
                 if (!Directory.Exists("Save"))
                     Directory.CreateDirectory("Save");
 
                 InitializeComponent();
 
                 SetColor(DefaultColorPicker);
-                
-                SetEnable(false,_mode);
-                
+
+                SetEnable(false, _mode);
+
                 SetTopMost(true);
 
 
                 SetBrushSize(_brushSizes[_brushIndex]);
 
                 ExtraToolPanel.Opacity = 0;
+                FontReduceButton.Opacity = 0;
+                FontIncreaseButton.Opacity = 0;
 
                 MainInkCanvas.Strokes.StrokesChanged += StrokesChanged;
 
@@ -87,6 +90,7 @@ namespace AntFu7.LiveDraw
                 MainInkCanvas.MouseLeftButtonUp += MainInkCanvas_MouseLeftButtonUp;
                 MainInkCanvas.MouseMove += MainInkCanvas_MouseMove;
 
+                _drawerTextBox.FontSize = 24.0; 
                 _drawerTextBox.Background = Application.Current.Resources["TrueTransparent"] as Brush;
                 _drawerTextBox.AcceptsReturn = true;
                 _drawerTextBox.TextWrapping = TextWrapping.Wrap;
@@ -101,7 +105,7 @@ namespace AntFu7.LiveDraw
 
         private void Exit(object sender, EventArgs e)
         {
-            if (IsUnsaved()) 
+            if (IsUnsaved())
                 QuickSave("ExitingAutoSave_");
 
             Application.Current.Shutdown(0);
@@ -184,25 +188,7 @@ namespace AntFu7.LiveDraw
             _inkVisibility = v;
         }
 
-        private void SetEraserMode(bool v)
-        {
-            if (v)
-            {
-                MainInkCanvas.EditingMode = InkCanvasEditingMode.EraseByStroke;
-                SetStaticInfo("擦除模式");
-                MainInkCanvas.UseCustomCursor = false;
-            }
-            else
-            {
-                SetStaticInfo("");
-                MainInkCanvas.UseCustomCursor = true;//this will stop to show eraser cursor shape
-            }
-
-            //MainInkCanvas.UseCustomCursor = !v;
-            EraserButton.IsActived = v;
-        }
-
-        private void SetEnable(bool enable,DrawMode mode)
+        private void SetEnable(bool enable, DrawMode mode)
         {
             _enable = enable;
             _mode = mode;
@@ -255,6 +241,23 @@ namespace AntFu7.LiveDraw
                 MainInkCanvas.Cursor = Cursors.Cross;
             }
 
+            if(_mode == DrawMode.Text)
+            {
+                if (FontIncreaseButton.Opacity == 0)
+                    FontIncreaseButton.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, Duration3));
+
+                if(FontReduceButton.Opacity == 0)
+                    FontReduceButton.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, Duration3));
+            }
+            else
+            {
+                if (FontIncreaseButton.Opacity == 1)
+                    FontIncreaseButton.BeginAnimation(OpacityProperty, new DoubleAnimation(1, 0, Duration3));
+
+                if (FontReduceButton.Opacity == 1)
+                    FontReduceButton.BeginAnimation(OpacityProperty, new DoubleAnimation(1, 0, Duration3));
+            }
+
             MainInkCanvas.UseCustomCursor = bUseCustomCursor;
             MainInkCanvas.EditingMode = editingMode;
 
@@ -298,8 +301,8 @@ namespace AntFu7.LiveDraw
         }
         private void SetOrientation(bool v)
         {
-            PaletteRotate.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(v ? -90:0, Duration4));
-            Palette.BeginAnimation(MinWidthProperty, new DoubleAnimation(v? 90:0, Duration7));
+            PaletteRotate.BeginAnimation(RotateTransform.AngleProperty, new DoubleAnimation(v ? -90 : 0, Duration4));
+            Palette.BeginAnimation(MinWidthProperty, new DoubleAnimation(v ? 90 : 0, Duration7));
             //PaletteGrip.BeginAnimation(WidthProperty, new DoubleAnimation((double)Application.Current.Resources[v ? "VerticalModeGrip" : "HorizontalModeGrip"], Duration3));
             //BasicButtonPanel.BeginAnimation(WidthProperty, new DoubleAnimation((double)Application.Current.Resources[v ? "VerticalModeFlowPanel" : "HorizontalModeFlowPanel"], Duration3));
             //PaletteFlowPanel.BeginAnimation(WidthProperty, new DoubleAnimation((double)Application.Current.Resources[v ? "VerticalModeFlowPanel" : "HorizontalModeFlowPanel"], Duration3));
@@ -327,13 +330,13 @@ namespace AntFu7.LiveDraw
                 if (fs == Stream.Null) return;
                 MainInkCanvas.Strokes.Save(fs);
                 _saved = true;
-                Display("Ink saved");
+                Display("画板保存成功");
                 fs.Close();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString());
-                Display("Fail to save");
+                Display("画板保存失败");
             }
         }
         private StrokeCollection Load(Stream fs)
@@ -345,7 +348,7 @@ namespace AntFu7.LiveDraw
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString());
-                Display("Fail to load");
+                Display("画板加载失败");
             }
             return new StrokeCollection();
         }
@@ -360,7 +363,7 @@ namespace AntFu7.LiveDraw
         {
             if (_preLoadStrokes == null) return;
             MainInkCanvas.Strokes = _preLoadStrokes;
-            Display("Ink loaded");
+            Display("画板加载完成");
             _saved = true;
             ClearHistory();
             MainInkCanvas.BeginAnimation(OpacityProperty, new DoubleAnimation(1, Duration3));
@@ -430,7 +433,7 @@ namespace AntFu7.LiveDraw
 
         private void MainInkCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if(_enable == false || _mode == DrawMode.Select ||  _mode == DrawMode.Pen || _mode == DrawMode.None || e.LeftButton != MouseButtonState.Pressed)
+            if (_enable == false || _mode == DrawMode.Select || _mode == DrawMode.Pen || _mode == DrawMode.None || e.LeftButton != MouseButtonState.Pressed)
             {
                 return;
             }
@@ -440,7 +443,7 @@ namespace AntFu7.LiveDraw
             _drawerIntPos = e.GetPosition(MainInkCanvas);
             _drawerLastStroke = null;
 
-            if(_mode == DrawMode.Text)
+            if (_mode == DrawMode.Text)
             {
 
                 _drawerTextBox.Text = "";
@@ -469,7 +472,7 @@ namespace AntFu7.LiveDraw
                     Push(_history, new StrokesHistoryNode(collection, StrokesHistoryNodeType.Added));
                 }
 
-                if(_drawerLastStroke != null && (_mode == DrawMode.Ray || _mode == DrawMode.Text))
+                if (_drawerLastStroke != null && (_mode == DrawMode.Ray || _mode == DrawMode.Text))
                 {
                     //us animation?
                     /*
@@ -538,7 +541,7 @@ namespace AntFu7.LiveDraw
                     DrawingAttributes = drawingAttributes,
                 };
             }
-            else if(_mode == DrawMode.Ray)
+            else if (_mode == DrawMode.Ray)
             {
                 //high lighter is ray line
                 drawingAttributes.IsHighlighter = true;
@@ -555,7 +558,7 @@ namespace AntFu7.LiveDraw
                     DrawingAttributes = drawingAttributes,
                 };
             }
-            else if(_mode == DrawMode.Line)
+            else if (_mode == DrawMode.Line)
             {
                 List<Point> pointList = new List<Point>
                 {
@@ -569,10 +572,10 @@ namespace AntFu7.LiveDraw
                     DrawingAttributes = drawingAttributes,
                 };
             }
-            else if(_mode == DrawMode.Arrow)
+            else if (_mode == DrawMode.Arrow)
             {
                 //FUCK THE MATH!!!!!!!!!!!!!!!FUCK !FUCK~!
-                double w=15, h = 15;
+                double w = 15, h = 15;
                 double theta = Math.Atan2(_drawerIntPos.Y - endP.Y, _drawerIntPos.X - endP.X);
                 double sint = Math.Sin(theta);
                 double cost = Math.Cos(theta);
@@ -614,7 +617,7 @@ namespace AntFu7.LiveDraw
                     DrawingAttributes = drawingAttributes,
                 };
             }
-            else if(_mode == DrawMode.Circle)
+            else if (_mode == DrawMode.Circle)
             {
                 List<Point> pointList = GenerateEclipseGeometry(_drawerIntPos, endP);
                 StylusPointCollection point = new StylusPointCollection(pointList);
@@ -769,7 +772,7 @@ namespace AntFu7.LiveDraw
         private void ClearAniComplete(object sender, EventArgs e)
         {
             Clear();
-            Display("Cleared");
+            Display("画板清除完成");
             MainInkCanvas.BeginAnimation(OpacityProperty, new DoubleAnimation(1, Duration3));
         }
         #endregion
@@ -792,7 +795,7 @@ namespace AntFu7.LiveDraw
         {
             if (MainInkCanvas.Strokes.Count == 0)
             {
-                Display("Nothing to save");
+                Display("没有笔迹要保存");
                 return;
             }
             QuickSave();
@@ -801,7 +804,7 @@ namespace AntFu7.LiveDraw
         {
             if (MainInkCanvas.Strokes.Count == 0)
             {
-                Display("Nothing to save");
+                Display("没有笔迹要保存");
                 return;
             }
             Save(SaveDialog(GenerateFileName()));
@@ -817,7 +820,7 @@ namespace AntFu7.LiveDraw
         {
             if (MainInkCanvas.Strokes.Count == 0)
             {
-                Display("Nothing to save");
+                Display("没有笔迹要保存");
                 return;
             }
             try
@@ -832,12 +835,12 @@ namespace AntFu7.LiveDraw
                 encoder.Frames.Add(BitmapFrame.Create(rtb));
                 encoder.Save(s);
                 s.Close();
-                Display("Image Exported");
+                Display("图片导出完成");
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString());
-                Display("Export failed");
+                Display("图片导出失败");
             }
         }
         private delegate void NoArgDelegate();
@@ -845,7 +848,7 @@ namespace AntFu7.LiveDraw
         {
             if (MainInkCanvas.Strokes.Count == 0)
             {
-                Display("Nothing to save");
+                Display("没有笔迹要保存");
                 return;
             }
             try
@@ -863,12 +866,12 @@ namespace AntFu7.LiveDraw
                 image.Save(s, ImageFormat.Png);
                 Palette.Opacity = 1;
                 s.Close();
-                Display("Image Exported");
+                Display("图片导出成功");
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString());
-                Display("Export failed");
+                Display("图片导出失败");
             }
         }
         #endregion
@@ -882,12 +885,12 @@ namespace AntFu7.LiveDraw
         }
         private void EnableButton_Click(object sender, RoutedEventArgs e)
         {
-            SetEnable(false,_mode);
+            SetEnable(false, _mode);
         }
 
         private void SelectButton_Click(object sender, RoutedEventArgs e)
         {
-            SetEnable(true,DrawMode.Select);
+            SetEnable(true, DrawMode.Select);
         }
 
         private void PenButton_Click(object sender, RoutedEventArgs e)
@@ -970,7 +973,7 @@ namespace AntFu7.LiveDraw
         {
             SetInkVisibility(!_inkVisibility);
         }
-        
+
         private void OrientationButton_Click(object sender, RoutedEventArgs e)
         {
             SetOrientation(!_displayOrientation);
@@ -1055,13 +1058,13 @@ namespace AntFu7.LiveDraw
             _isDraging = true;
             Palette.Background = new SolidColorBrush(Colors.Transparent);
             _tempEnable = _enable;
-            SetEnable(true,_mode);
+            SetEnable(true, _mode);
         }
         private void EndDrag()
         {
-            if(_isDraging == true)
+            if (_isDraging == true)
             {
-                SetEnable(_tempEnable,_mode);
+                SetEnable(_tempEnable, _mode);
             }
 
             _isDraging = false;
@@ -1085,12 +1088,30 @@ namespace AntFu7.LiveDraw
         private void Palette_MouseUp(object sender, MouseButtonEventArgs e)
         { EndDrag(); }
         private void Palette_MouseLeave(object sender, MouseEventArgs e)
-        { 
+        {
             EndDrag();
         }
 
 
 
         #endregion
+
+        private void FontReduceButton_Click(object sender, RoutedEventArgs e)
+        {
+            _drawerTextBox.FontSize = _drawerTextBox.FontSize -2;
+
+            _drawerTextBox.FontSize = Math.Max(14, _drawerTextBox.FontSize);
+
+            Display("字体大小 -2");
+        }
+
+        private void FontIncreaseButton_Click(object sender, RoutedEventArgs e)
+        {
+            _drawerTextBox.FontSize = _drawerTextBox.FontSize + 2;
+
+            _drawerTextBox.FontSize = Math.Min(60, _drawerTextBox.FontSize);
+
+            Display("字体大小 +2");
+        }
     }
 }
