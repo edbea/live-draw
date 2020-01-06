@@ -108,7 +108,7 @@
                     <WrapPanel x:Name="PaletteFlowInsiderPanel" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Grid x:Name="BasicButtonPanel" Width="{StaticResource HorizontalModeColorPickersPanel}" Margin="0">
                             <WrapPanel VerticalAlignment="Top" Margin="0,0,6,0" Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Border x:Name="PaletteGrip" Width="200" Cursor="SizeAll" Height="25" MouseDown="PaletteGrip_MouseDown"  HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0" Padding="3" >
+                                <Border x:Name="PaletteGrip" Width="330" Cursor="SizeAll" Height="25" MouseDown="PaletteGrip_MouseDown"  HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0" Padding="3" >
                                     <Border CornerRadius="5" Background="#338A8A8A" ToolTip="点击拖动画笔工具栏">
                                         <TextBlock x:Name="InfoBox" Foreground="Black" FontSize="10" FontFamily="Consolas" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>

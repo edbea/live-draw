@@ -465,7 +465,7 @@ namespace AntFu7.LiveDraw
             {
                 Point endP = e.GetPosition(MainInkCanvas);
 
-                if (_drawerLastStroke != null && _mode != DrawMode.Ray)
+                if (_drawerLastStroke != null && _mode != DrawMode.Ray && _mode != DrawMode.Text)
                 {
                     StrokeCollection collection = new StrokeCollection();
                     collection.Add(_drawerLastStroke);
