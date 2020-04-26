@@ -88,6 +88,7 @@ namespace AntFu7.LiveDraw
 
                 MainInkCanvas.MouseLeftButtonDown += MainInkCanvas_MouseLeftButtonDown;
                 MainInkCanvas.MouseLeftButtonUp += MainInkCanvas_MouseLeftButtonUp;
+                MainInkCanvas.MouseRightButtonUp += MainInkCanvas_MouseRightButtonUp;
                 MainInkCanvas.MouseMove += MainInkCanvas_MouseMove;
 
                 _drawerTextBox.FontSize = 24.0; 
@@ -101,6 +102,11 @@ namespace AntFu7.LiveDraw
             {
                 Application.Current.Shutdown(0);
             }
+        }
+
+        private void MainInkCanvas_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            SetEnable(false, _mode);
         }
 
         private void Exit(object sender, EventArgs e)
